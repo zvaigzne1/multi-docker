@@ -1,0 +1,24 @@
+language: generic 
+sudo: required
+services:
+  - docker
+
+# tests are run on development mode because all fails aviable
+before_install:
+ - docker build -t zvaigzne/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true USERNAME/react-test npm test
+
+after_success:
+  - docker build -t zvaigzne/multi-client ./client
+  - docker build -t zvaigzne/multi-nginx ./nginx
+  - docker build -t zvaigzne/multi-server ./server
+  - docker build -t zvaigzne/multi-worker ./worker
+# Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# Take those images and push them to docker hub
+  - docker push zvaigzne/multi-client
+  - docker push zvaigzne/multi-nginx
+  - docker push zvaigzne/multi-server
+  - docker push zvaigzne/multi-worker
